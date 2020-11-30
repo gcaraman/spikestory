@@ -1,0 +1,57 @@
+﻿@page "/generatekeys"
+
+@using SpikeStoryBlazorApp.Data
+@using SpikeStoryBlazorApp.Data.Models
+@inject PkiService PkiService
+
+<h1>SSH keys</h1>
+
+<p>Create a new set of keys.</p>
+<br />
+<EditForm ID="new-keys-form" Model="@certificateRequest" OnValidSubmit="@GenerateCertificates">
+    <DataAnnotationsValidator />
+    <div>
+        <SfTextBox Placeholder="Common Name" FloatLabelType="@FloatLabelType.Always" @bind-Value="@certificateRequest.CommonName" ShowClearButton="true" />
+        <ValidationMessage For="@(() => certificateRequest.CommonName)"></ValidationMessage>
+    </div>
+    <div>
+        <label for="certificateRequest.ExcludeCnFromSans">Checkbox</label>
+        <SfCheckBox @bind-Checked="certificateRequest.ExcludeCnFromSans" />
+        <ValidationMessage For="@(() => certificateRequest.ExcludeCnFromSans)"></ValidationMessage>
+    </div>
+    <div>
+        <SfTextBox Placeholder="Public Format" FloatLabelType="@FloatLabelType.Always" @bind-Value="certificateRequest.Format" />
+        <ValidationMessage For="@(() => certificateRequest.Format)"></ValidationMessage>
+    </div>
+    <div>
+        <SfTextBox Placeholder="Private Format" FloatLabelType="@FloatLabelType.Always" @bind-Value="certificateRequest.PrivateKeyFormat" />
+        <ValidationMessage For="@(() => certificateRequest.PrivateKeyFormat)"></ValidationMessage>
+    </div>
+    <div>
+        <SfTextBox Placeholder="Duration" FloatLabelType="@FloatLabelType.Always" @bind-Value="certificateRequest.Ttl" />
+        <ValidationMessage For="@(() => certificateRequest.Ttl)"></ValidationMessage>
+    </div>
+    <div>
+        <SfTextBox Placeholder="Private certificate password" FloatLabelType="@FloatLabelType.Always" @bind-Value="certificateRequest.Pin" />
+        <ValidationMessage For="@(() => certificateRequest.Pin)"></ValidationMessage>
+    </div>
+    <br /><br />
+    <div class="e-footer-content">
+        <div class="button-container">
+            <button type="submit" class="e-btn e-normal e-primary">Submit</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    private HttpResponse<byte[]> pkiResponse;
+    private string certificate;
+    private CertificateRequest certificateRequest = new CertificateRequest();
+
+    private async void GenerateCertificates()
+    {
+        pkiResponse = await PkiService.GenerateCertificates(certificateRequest).ConfigureAwait(true);
+        certificate = PkiService.Unzip(pkiResponse.Data);
+        StateHasChanged();
+    }
+}
